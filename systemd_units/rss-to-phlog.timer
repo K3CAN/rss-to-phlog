@@ -1,0 +1,10 @@
+[Unit]
+Description=A timer to trigger rss-to-phlog
+Requires=rss-to-phlog.service
+
+[Timer]
+OnBootSec=10min
+OnUnitInactiveSec=3h
+
+[Install]
+WantedBy=timers.target

@@ -8,11 +8,11 @@ my $count;
 
 #Options-----------------------------
   #URL for the RSS or ATOM feed:
-  my $feed_url = "https://blog.k3can.us/index.php?feed/rss2";
+  my $feed_url = "https://your.rss.feed.here";
   #Plog root (with trailing slash):
   my $root = "./test/";
   #Number of entries to pull at a time
-  my $entry_count = 10;
+  my $entry_count = 3;
   #Set to true to print some extra debug info
   my $debug = 1;
 #------------------------------------

@@ -1,0 +1,6 @@
+[Unit]
+Description=Pull RSS and create text entries for phlog 
+
+[Service]
+Type=simple
+ExecStart=/path/to/rss-to-phlog.pl
