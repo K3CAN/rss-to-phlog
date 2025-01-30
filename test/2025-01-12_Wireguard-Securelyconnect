@@ -1,0 +1,76 @@
+          Background
+
+After setting up my home server, I found that I wanted a way to securely access and manage my system when I was away from home. I could have opened the SSH port to the internet, but the idea of having such a well-known port exposed to the internet made me wary not only of attempts to gain unauthorized access, but even just simple DOS attacks.  I decided the far better option was to use a VPN, specifically, Wireguard.
+
+Wireguard is a simple, lightweight VPN, with clients for Linux, Android, Windows, and a handful of other operating systems. In addition to the security offered by its encrypted VPN tunnel, Wireguard is also a "quiet" service; that is, the application will entirely ignore all attempts to communicate with it unless the correct encryption key is used. This means that common intelligence gathering tactics, such as port scans, won't reveal the existence of the VPN. From the perspective of an attacker, the port being used by Wireguard appears to be closed. This can help prevent attacks, including DOS, because an attacker simply won't know that there's anything there to attack.
+
+Now, when I set about trying to install and configure Wireguard, I found that many of the online guides were either overly complex, or so incredibly simple that they only provided a list of commands to run without ever explaining what those commands did. The overly complex explanation turned out to be too confusing for me, but on the other hand, I'm also not someone to run random commands on my system without understanding what they do. I did eventually figure it out, though, so I thought I'd try writing my own explanation to hopefully offer others a middle ground.
+
+Introduction
+
+Wireguard uses public key encryption to create a secure tunnel between two "peer" machines at the network layer. It's free, open source software, and is designed to be simple to use while still providing a minimum attack surface.
+
+In essence, wireguard creates a new ipv4 network over an existing network. On a device running wireguard, the wireguard network simply appears to be an additional network interface with a new IP address. On a typical laptop, for example, one might have several network interfaces, like lo, eth0 and wlan0, with an additional interface for wireguard appearing as wg0.
+
+Installation
+
+Installing Wireguard is typically done through your package manager, i.e. apt, dnf, pacman, etc, or optionally installed via a container package, via podman, flatpack, snap, appimage, or docker.
+
+For example, apt install wireguard-tools. Depending on your system setup, you may need to preface this and some of the other commands in this walkthrough with the word "sudo".
+
+Configuration
+
+Once installed, wireguard will need to be configured. 
+Wireguard considers devices to be peers, rather than using a client/server relationship. That means that there is no "primary" device that others connect to, rather, they can all connect to each other, just like a typical LAN. That said, for the sake of explanation, it is sometimes easier understand if we use the server/client labels, despite the devices not technically functioning in that relationship.  In other words, I'm going to say "server" and "client" because I find it less confusing than saying "peer A" and "peer B".
+
+We'll start on the "server" (aka. Peer A, not technically a server, yada yada) by running wg genkey | tee private.key | wg pubkey &gt; public.key.
+
+wg genkey produces a random "Private key", which will be used by the peer to decrypt the packets it receives. tee is a basic linux command that sends the output of one command to two destinations (like a T shaped pipe). In this case, it is writing the private key to a file called "private.key" and also sending the same data to the next command wg pubkey. This command creates a "public key" based on the "private key" it was given. Lastly, &gt; is writing the output of wg pubkey to the file public.key. 
+After running that command, we now have two files: private.key and public.key.
+
+We can view the actual key by running cat private.key or cat public.key.
+
+We'll repeat those same steps on the "client".
+
+Next, let's decide what IP network address we want to use for the wireguard network. Remember that this needs to be different from your normal local network. There are several different network ranges available, but the most common is 192.168.1.0/24. Those first three "octets", 192, 168, and 1 define the network in this IP address, while the last one defines the device's address within that network. So, what's important here is that if your primary network is 192.168.1.0/24, that we assign the wireguard network a different address, like 192.168.2.0/24. By changing that 1 to a 2, we're addressing an entirely different network.
+
+Now, we'll create the configuration files themselves. 
+On the server, we'll create a configuration file by using a text editor, such as nano. nano /etc/wireguard/wg0.conf will create a file called wg0.conf and open it for editing. The name of this configuration will be the name of the network interface. It doesn't need to be wg0, but that's a simple, easy to remember option.
+
+Here is an example configuration file for the server:
+
+[Interface]
+PrivateKey = (Your server's private key here)
+Address = 192.168.2.10/24  
+ListenPort = 51820
+
+[Peer]
+PublicKey = (Client's public key here)
+AllowedIPs = 192.168.2.0/24
+Endpoint = (see below)
+
+
+PrivateKey is one that we generated on this server.
+
+Address is the IP address that we're assigning to this server on the wireguard interface. This is our wireguard network address.
+
+ListenPort is the "port" that wireguard is going to "listen" to. If you're not familiar with ports, think of it this way: an IP address is used to address packets to a specific device, and a port number is how you address those packets to a specific application on that device. In this case, Wireguard will be "listening" for packets that come in addressed to port number 51820. That number is somewhat arbitrary, but for uniformity, certain applications tend to use certain port numbers and 51820 is typical for wireguard.
+
+The [Peer] section defines the other system/s on the network, in this case, our "client" system.
+
+PublicKey is the public key created on the client device.
+
+AllowedIPs tells wireguard which IP address it should forward to this peer. Here, we're telling it that any packets addressed to the 192.168.2.0/24 network should be forwarded out to this peer (our client system).
+
+Endpoint is how we reach this peer. Because wireguard creates a network on top of an existing network, we need to tell wireguard how to get to the peer on the existing network before it can use the wireguard network. If you're connecting two devices on your LAN, we would just enter the normal IP address of the peer, such as 192.168.1.123. If you're connecting to another device over the internet, you will need  to have a way to address packets to that device, such as a public IP address or a domain name. This will be specific to your network situation. 
+Following the IP or domain name is a colon and the port number. 
+For this example we'll assume the other machine is on your LAN at address 192.168.1.123 so we can just enter the IP address and the port number, like so: 192.168.1.123:51820. 
+Lastly, save the file.
+
+We'll then reverse this process on the 'client', assigning it a different IP address on the same network, such as 192.168.2.10/24 and using the clients PrivateKey and the server's Public Key. 
+Once we've completed the configuration files on both device, we can use the command wg-quick up wg0, telling wireguard to start (bring up) the wg0 interface we just configured.
+
+Final Notes
+
+It should be noted that the "Endpoint" setting is only required on one of the two peers. This can be useful if you want to use wireguard while you're away from your home. My "server" at home may keep the same public IP all the time, but my portable laptop will have a different public IP address every time I move to a new network. In this case, I would remove the "endpoint" setting entirely from the configuration file on the server, and only use that setting on the laptop. 
+Remember, the one system needs to be able to connect to the other system over an existing network before wireguard can create the VPN connection between them. Most of the issues a user might encounter while trying to set up wireguard isn't actually related to wireguard itself, but rather the underlying network. Firewalls and Network Address Translation (NAT) are the most common causes of problems, but the steps to address these issues will vary significantly depending on your network situation.
