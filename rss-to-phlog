@@ -5,8 +5,8 @@ use LWP::Protocol::https;
 use strict;
 use Getopt::Std;
 
-getopts('f:r:e:');
-our ($opt_e,$opt_f,$opt_r);
+getopts('hf:r:e:');
+our ($opt_e,$opt_f,$opt_r, $opt_h);       HELP_MESSAGE() if $opt_h; 
 my $count;
 my $feed_url = defined($opt_f) ? $opt_f : HELP_MESSAGE();   
 my $phlogroot = defined($opt_r) ? $opt_r : HELP_MESSAGE();
@@ -70,12 +70,13 @@ print <<EOF;
 
 DESCRIPTION
 
-This program extracts post titles, dates and body content from a blog's RSS feed 
-and then creates a series of plain files. Each file is titled with the date and 
-post title, and the post content is written to the file in plain text. 
+This program extracts post titles, dates and body content from a blog's
+RSS feed and then creates a series of plain files. Each file is titled 
+with the date and post title, and the post content is written to the 
+file in plain text. 
 
-This was created for the purpose of automatically mirroring a W3 blog to a gopher
-server, but could potentially have other uses. 
+This was created for the purpose of automatically mirroring a W3 blog
+to a gopher server, but could potentially have other uses. 
 
 USAGE
 
@@ -85,14 +86,14 @@ The following options are supported:
 
 -r [path]   Required to specify the destination path
 -f [feed]   Required to specify the RSS feed address (in double quotes)
--e [number] Optional to specify the number of RSS entries to review. Default is 3.
---help      Print this message and exit.  
+-e [number] Optional to specify the number of RSS entries to review. Default=3.
+-h|--help   Print this message and exit. 
 
-Note: Depending on the feed, this script may pull a large number of entries each 
-time it is run. You may be able to limit this by requesting a reduced feed via 
-API or adjusting the feed settings if you control the feed. Setting -e does NOT 
-change how many entries are received from the RSS feed, it only determines how 
-many of the received entries are processed. 
+Note: Depending on the feed, this script may pull a large number of entries
+each  time it is run. You may be able to limit this by requesting a reduced 
+feed via API or adjusting the feed settings if you control the feed. 
+Setting -e does NOT  change how many entries are received from the RSS feed,
+it only determines how many of the received entries are processed. 
 EOF
   exit 2;
 }
