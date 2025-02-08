@@ -3,4 +3,5 @@ Description=Pull RSS and create text entries for phlog
 
 [Service]
 Type=simple
-ExecStart=/path/to/rss-to-phlog.pl
+#Replace paths and feed with actual values.
+ExecStart=/path/to/rss-to-phlog -r /path/to/dest/folder/ -f "https://rss.example.feed" 

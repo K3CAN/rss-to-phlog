@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+my $VERSION=1.2;
 
 use XML::Feed;
 use LWP::Protocol::https;
@@ -10,7 +11,7 @@ our ($opt_e,$opt_f,$opt_r, $opt_h);       HELP_MESSAGE() if $opt_h;
 my $count;
 my $feed_url = defined($opt_f) ? $opt_f : HELP_MESSAGE();   
 my $phlogroot = defined($opt_r) ? $opt_r : HELP_MESSAGE();
-my $entry_count = defined($opt_e) ? $opt_e : 3;
+my $entry_count = defined($opt_e) ? $opt_e : 5;
 
 #------------------------------------
 
@@ -86,7 +87,7 @@ The following options are supported:
 
 -r [path]   Required to specify the destination path
 -f [feed]   Required to specify the RSS feed address (in double quotes)
--e [number] Optional to specify the number of RSS entries to review. Default=3.
+-e [number] Optional to specify the number of RSS entries to review. Default=5.
 -h|--help   Print this message and exit. 
 
 Note: Depending on the feed, this script may pull a large number of entries
@@ -95,5 +96,13 @@ feed via API or adjusting the feed settings if you control the feed.
 Setting -e does NOT  change how many entries are received from the RSS feed,
 it only determines how many of the received entries are processed. 
 EOF
-  exit 2;
+  exit;
+}
+
+sub VERSION_MESSAGE {
+  print <<EOF;
+rss-to-phlog - Version $VERSION.
+Written by Adam Behr
+EOF
+  exit;
 }
