@@ -1,21 +1,18 @@
 #!/usr/bin/perl
+my $VERSION=1.2;
 
 use XML::Feed;
 use LWP::Protocol::https;
 use strict;
+use Getopt::Std;
+
+getopts('hf:r:e:');
+our ($opt_e,$opt_f,$opt_r, $opt_h);       HELP_MESSAGE() if $opt_h; 
 my $count;
+my $feed_url = defined($opt_f) ? $opt_f : HELP_MESSAGE();   
+my $phlogroot = defined($opt_r) ? $opt_r : HELP_MESSAGE();
+my $entry_count = defined($opt_e) ? $opt_e : 5;
 
-# Note: Depending on the feed, this script may pull a large number of entries each time it 
-# is run. You may be able to limit this by requesting a reduced feed via API or adjusting the feed
-# settings if you control the feed.  
-
-#Options-----------------------------
-  #URL for the RSS or ATOM feed. Either pass from the command line or assign here:
-  my $feed_url = defined($ARGV[0]) ? $ARGV[0] : "https://your.rss.feed.here";
-  #Plog root (with trailing slash):
-  my $phlogroot = "./test/";
-  #Number of entries to review
-  my $entry_count = 3;
 #------------------------------------
 
 my $feed = XML::Feed->parse(URI->new($feed_url)) or die XML::Feed->errstr;
@@ -28,7 +25,7 @@ for my $entry ($feed->entries) {
   last if $count == $entry_count;
 }
 
-#Notes to myself
+#Notes to myself, because I'll probably forget:
 #$feed->entries returns an array containing XML::Feed::Entry objects.
 #Those Entry objects then contain "Content" which are XML::Feed::Content objects. 
 
@@ -67,4 +64,45 @@ sub strip_html {
   $_[0]=~ s/<br\s*\/?>/\n/gi; #replace HTML newlines with \n 
   $_[0] =~ s/<\/?([a-zA-Z]+)[^>]*>//gi; #strip any remaining HTML tags entirely.
   return $_[0];
+}
+
+sub HELP_MESSAGE {
+print <<EOF;
+
+DESCRIPTION
+
+This program extracts post titles, dates and body content from a blog's
+RSS feed and then creates a series of plain files. Each file is titled 
+with the date and post title, and the post content is written to the 
+file in plain text. 
+
+This was created for the purpose of automatically mirroring a W3 blog
+to a gopher server, but could potentially have other uses. 
+
+USAGE
+
+rss-to-phlog [OPTIONS]
+
+The following options are supported: 
+
+-r [path]   Required to specify the destination path
+-f [feed]   Required to specify the RSS feed address (in double quotes)
+-e [number] Optional to specify the number of RSS entries to review. Default=5.
+-h|--help   Print this message and exit. 
+
+Note: Depending on the feed, this script may pull a large number of entries
+each  time it is run. You may be able to limit this by requesting a reduced 
+feed via API or adjusting the feed settings if you control the feed. 
+Setting -e does NOT  change how many entries are received from the RSS feed,
+it only determines how many of the received entries are processed. 
+EOF
+  exit;
+}
+
+sub VERSION_MESSAGE {
+  print <<EOF;
+rss-to-phlog - Version $VERSION.
+Written by Adam Behr
+EOF
+  exit;
 }
