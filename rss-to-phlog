@@ -66,6 +66,7 @@ sub strip_html {
   $_[0] =~ s/\&quot;/"/gi;    # Double quote
   $_[0] =~ s/\&apos;/'/gi;    # Apostrophe/Single quote
   $_[0] =~ s/\&rsquo;/'/gi;   # Right single quote
+  $_[0] =~ s/\&hellip;/.../gi;# Ellipsis
   $_[0] =~ s/\&amp;/&/gi;     # Ampersand (must be last)
   $_[0] =~ s/<\/?([a-zA-Z]+)[^>]*>//gi; #strip any remaining HTML tags entirely.
   return $_[0];
