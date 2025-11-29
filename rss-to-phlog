@@ -20,8 +20,8 @@ warn "Found feed titled ", $feed->title, ".\n";
 
 for my $entry ($feed->entries) {
   $count++;
-  warn "$count: Found entry titled ", $entry->title, ".\n";
-  write_entry($entry->title, $entry->content->body, $entry->issued->ymd,$phlogroot);  
+  warn "$count: Found entry titled ", $entry->title, ", with an ID of ", $entry->id, ".\n";
+  write_entry($entry->title, $entry->content->body, $entry->issued->ymd,$phlogroot,$entry->id);  #passing unique ID
   last if $count == $entry_count;
 }
 
@@ -29,18 +29,17 @@ for my $entry ($feed->entries) {
 #$feed->entries returns an array containing XML::Feed::Entry objects.
 #Those Entry objects then contain "Content" which are XML::Feed::Content objects. 
 
-
 #Subroutines--------------------------
 
 sub write_entry {
-  my ($title,$content,$date,$root) = @_;
+  my ($title,$content,$date,$root,$id) = @_;        #receiving ID
   my $filename = getfilename($title,$date,$root);
   $content = strip_html($content);
   if (-e $filename) {
     warn "\tEntry $title already exists\n";
     open (my $phlog, '<',$filename) or die "Found $filename but cannot open it\n";
     my $existing = do {local $/ = undef; <$phlog>};   #slurp in the file as a single string
-    if ($content eq $existing) {                      #Could use a hash (MD5) here instead? 
+    if ($content eq $existing) {
       warn "\tNo changes to $title, skipping\n";
       close $phlog;
       return;
@@ -58,10 +57,16 @@ sub getfilename {
   return($root.substr($date."_".$title, 0,36));
 }
 
-#Consider replacing this with HTML::Strip? What about images? 
 sub strip_html {        
   $_[0] =~ s/<img[^>]*?src\s*=\s*[""']?([^'"" >]+?)[ '""][^>]*?>/\(http link: $1\)/gi; #replace images with plain text addresses
   $_[0]=~ s/<br\s*\/?>/\n/gi; #replace HTML newlines with \n 
+  $_[0] =~ s/\&nbsp;/ /gi;    # Non-breaking space
+  $_[0] =~ s/\&lt;/</gi;      # Less-than sign
+  $_[0] =~ s/\&gt;/>/gi;      # Greater-than sign
+  $_[0] =~ s/\&quot;/"/gi;    # Double quote
+  $_[0] =~ s/\&apos;/'/gi;    # Apostrophe/Single quote
+  $_[0] =~ s/\&rsquo;/'/gi;   # Right single quote
+  $_[0] =~ s/\&amp;/&/gi;     # Ampersand (must be last)
   $_[0] =~ s/<\/?([a-zA-Z]+)[^>]*>//gi; #strip any remaining HTML tags entirely.
   return $_[0];
 }
