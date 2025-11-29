@@ -59,15 +59,17 @@ sub getfilename {
 
 sub strip_html {        
   $_[0] =~ s/<img[^>]*?src\s*=\s*[""']?([^'"" >]+?)[ '""][^>]*?>/\(http link: $1\)/gi; #replace images with plain text addresses
-  $_[0]=~ s/<br\s*\/?>/\n/gi; #replace HTML newlines with \n 
-  $_[0] =~ s/\&nbsp;/ /gi;    # Non-breaking space
-  $_[0] =~ s/\&lt;/</gi;      # Less-than sign
-  $_[0] =~ s/\&gt;/>/gi;      # Greater-than sign
-  $_[0] =~ s/\&quot;/"/gi;    # Double quote
-  $_[0] =~ s/\&apos;/'/gi;    # Apostrophe/Single quote
-  $_[0] =~ s/\&rsquo;/'/gi;   # Right single quote
-  $_[0] =~ s/\&hellip;/.../gi;# Ellipsis
-  $_[0] =~ s/\&amp;/&/gi;     # Ampersand (must be last)
+  $_[0]=~ s/<br\s*\/?>/\n/gi;     #replace HTML newlines with \n 
+  $_[0] =~ s/\&nbsp;/ /gi;        # Non-breaking space
+  $_[0] =~ s/\&lt;/</gi;          # Less-than sign
+  $_[0] =~ s/\&gt;/>/gi;          # Greater-than sign
+  $_[0] =~ s/\&quot;/"/gi;        # Double quote
+  $_[0] =~ s/\&apos;/'/gi;        # Apostrophe/Single quote
+  $_[0] =~ s/\&rsquo;/'/gi;       # Right single quote
+  $_[0] =~ s/\&rdquo;/"/gi;       # Right double quote
+  $_[0] =~ s/\&ldquo;/"/gi;       # Left double quote
+  $_[0] =~ s/\&hellip;/\.\.\./gi; # Ellipsis
+  $_[0] =~ s/\&amp;/&/gi;         # Ampersand (must be last)
   $_[0] =~ s/<\/?([a-zA-Z]+)[^>]*>//gi; #strip any remaining HTML tags entirely.
   return $_[0];
 }
